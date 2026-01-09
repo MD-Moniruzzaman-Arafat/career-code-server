@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://mdmoniruzzamanarafat_db_user:${process.env.DB_PASSWORD}@cluster0.cvx7qwv.mongodb.net/?appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -35,6 +35,7 @@ async function run() {
     const database = client.db('career-code');
     const jobsCollection = database.collection('jobs');
 
+    // get all jobs api
     app.get('/jobs', async (req, res) => {
       const cursor = jobsCollection.find();
       const jobs = await cursor.toArray();
@@ -42,6 +43,17 @@ async function run() {
         status: 'success',
         length: jobs.length,
         data: jobs,
+      });
+    });
+
+    // get single job api
+    app.get('/jobs/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = new ObjectId(id);
+      const job = await jobsCollection.findOne(query);
+      res.status(200).json({
+        status: 'success',
+        data: job,
       });
     });
   } finally {
