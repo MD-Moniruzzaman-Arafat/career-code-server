@@ -34,6 +34,7 @@ async function run() {
 
     const database = client.db('career-code');
     const jobsCollection = database.collection('jobs');
+    const appliedJobsCollection = database.collection('appliedJobs');
 
     // get all jobs api
     app.get('/jobs', async (req, res) => {
@@ -49,11 +50,28 @@ async function run() {
     // get single job api
     app.get('/jobs/:id', async (req, res) => {
       const id = req.params.id;
-      const query = new ObjectId(id);
+      const query = { _id: new ObjectId(id) };
       const job = await jobsCollection.findOne(query);
       res.status(200).json({
         status: 'success',
         data: job,
+      });
+    });
+
+    app.post('/applyJob', async (req, res) => {
+      const appliedJob = req.body;
+      const result = await appliedJobsCollection.insertOne(appliedJob);
+      res.status(201).json({
+        status: 'success',
+        data: result,
+      });
+    });
+    app.get('/applyJob', async (req, res) => {
+      const query = { email: req.query.email };
+      const result = await appliedJobsCollection.find(query).toArray();
+      res.status(200).json({
+        status: 'success',
+        data: result,
       });
     });
   } finally {
