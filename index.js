@@ -36,6 +36,16 @@ async function run() {
     const jobsCollection = database.collection('jobs');
     const appliedJobsCollection = database.collection('appliedJobs');
 
+    // post jobs api
+    app.post('/jobs', async (req, res) => {
+      const job = req.body;
+      const result = await jobsCollection.insertOne(job);
+      res.status(201).json({
+        status: 'success',
+        data: result,
+      });
+    });
+
     // get all jobs api
     app.get('/jobs', async (req, res) => {
       const cursor = jobsCollection.find();
