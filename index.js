@@ -79,6 +79,23 @@ async function run() {
       });
     });
 
+    // edit my posted job api
+    app.patch('/jobs/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatedJob = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const result = await jobsCollection.updateOne(
+        filter,
+        { $set: updatedJob },
+        options
+      );
+      res.status(200).json({
+        status: 'success',
+        data: result,
+      });
+    });
+
     app.post('/applyJob', async (req, res) => {
       const appliedJob = req.body;
       const result = await appliedJobsCollection.insertOne(appliedJob);
