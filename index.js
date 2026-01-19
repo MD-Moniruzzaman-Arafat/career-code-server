@@ -68,6 +68,17 @@ async function run() {
       });
     });
 
+    // delete my posted job api
+    app.delete('/jobs/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await jobsCollection.deleteOne(query);
+      res.status(200).json({
+        status: 'success',
+        data: result,
+      });
+    });
+
     app.post('/applyJob', async (req, res) => {
       const appliedJob = req.body;
       const result = await appliedJobsCollection.insertOne(appliedJob);
