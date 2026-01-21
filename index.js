@@ -1,4 +1,6 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
@@ -7,8 +9,30 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ['http://localhost:5173'],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies.token || '';
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized: No token provided' });
+  }
+  // Verify the token
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+    }
+    // Token is valid, proceed to the next middleware or route handler
+    req.user = decoded; // You can store decoded information in req.user if needed
+    console.log('Decoded JWT:', decoded);
+    next();
+  });
+};
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://mdmoniruzzamanarafat_db_user:${process.env.DB_PASSWORD}@cluster0.cvx7qwv.mongodb.net/?appName=Cluster0`;
@@ -36,6 +60,22 @@ async function run() {
     const jobsCollection = database.collection('jobs');
     const appliedJobsCollection = database.collection('appliedJobs');
 
+    // jwt token api
+    app.post('/jwt', (req, res) => {
+      const user = req.body;
+      // console.log(user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1h',
+      });
+
+      // set token in cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: false,
+      });
+      res.status(200).json({ token });
+    });
+
     // post jobs api
     app.post('/jobs', async (req, res) => {
       const job = req.body;
@@ -58,7 +98,8 @@ async function run() {
     });
 
     // get single job api
-    app.get('/jobs/:id', async (req, res) => {
+    app.get('/jobs/:id', verifyToken, async (req, res) => {
+      console.log('cookies:', req.cookies);
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const job = await jobsCollection.findOne(query);
