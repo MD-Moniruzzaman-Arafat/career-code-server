@@ -17,8 +17,9 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
-const verifyToken = async (req, res, next) => {
-  const token = req.cookies.token || '';
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token || '';
+  console.log('Token from cookies:', token);
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized: No token provided' });
   }
@@ -49,12 +50,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db('admin').command({ ping: 1 });
-    console.log(
-      'Pinged your deployment. You successfully connected to MongoDB!'
-    );
+    // await client.db('admin').command({ ping: 1 });
+    // console.log(
+    //   'Pinged your deployment. You successfully connected to MongoDB!'
+    // );
 
     const database = client.db('career-code');
     const jobsCollection = database.collection('jobs');
@@ -72,6 +73,7 @@ async function run() {
       res.cookie('token', token, {
         httpOnly: true,
         secure: false,
+        sameSite: 'Lax',
       });
       res.status(200).json({ token });
     });
