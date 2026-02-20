@@ -103,7 +103,7 @@ async function run() {
     });
 
     // get single job api
-    app.get('/jobs/:id', verifyToken, async (req, res) => {
+    app.get('/jobs/:id', async (req, res) => {
       console.log('cookies:', req.cookies);
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
